@@ -17,14 +17,14 @@ class GLMBernoulliEvaluator(EvaluatorBase):
         )
         return 1.0 / (1.0 + np.exp(-score))
 
-    def predict_std(self, data):
+    def predict_std(self, data, n_samples=None):
         data = self.create_vector(data)
         score = (
-            np.inner(self.weights["coef"], data)
-            + self.weights["intercept"][:, np.newaxis]
+            np.inner(self.weights["coef"][:n_samples], data)
+            + self.weights["intercept"][:n_samples, np.newaxis]
         )
         proba = 1.0 / (1.0 + np.exp(-score))
-        return proba.std(axis=-1)
+        return proba.std(0)
 
 
 class GLMBernoulli(pmb.PMModelBase):

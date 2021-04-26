@@ -30,7 +30,7 @@ class EvaluatorBase:
     def __init__(self, *args, targets, **kwargs):
         self.targets = targets
 
-    def predict_std(self, data):
+    def predict_std(self, data, n_samples=None):
         raise NotImplementedError
 
     def predict_proba(self, data):

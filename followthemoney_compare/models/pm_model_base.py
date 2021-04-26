@@ -33,7 +33,7 @@ class PMModelBase(TrainerBase):
             error = pm.Potential("error", logp)
         return error
 
-    def fit(self, n_samples=1_000, n_tune=1_000):
+    def fit(self, n_samples=2_500, n_tune=1_000):
         if not self.can_sample:
             return
         with self.model:
