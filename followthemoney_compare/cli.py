@@ -31,15 +31,20 @@ def list_models():
 
 
 @main.command("train")
+@click.option("--plot", default=None, type=click.Path(dir_okay=False, writable=True))
 @click.argument("model_name", type=click.Choice(tuple(MODEL_LOOKUP.keys())))
 @click.argument("data-file", type=click.File("rb"))
 @click.argument("output-file", type=click.File("wb+"))
-def train(model_name, data_file, output_file):
+def train(model_name, data_file, output_file, plot=None):
     df = pd.read_pickle(data_file)
     model = MODEL_LOOKUP[model_name]
-    m = model(df)
-    m.fit()
+    m = model()
+    m.fit(df)
+    print(m.summarize())
     output_file.write(m.evaluator.to_pickles())
+    if plot:
+        ax = m.precision_recall_accuracy_curve(df)
+        ax.figure.savefig(plot)
 
 
 if __name__ == "__main__":

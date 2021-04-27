@@ -9,7 +9,6 @@ from followthemoney import model, compare
 
 PairWeights = namedtuple("PairWeights", ("user_weight", "pair_weight"))
 TARGETS = "name country date identifier address phone email iban url".split(" ")
-HAS_TARGETS = [f"has_{t}" for t in TARGETS]
 
 
 def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):

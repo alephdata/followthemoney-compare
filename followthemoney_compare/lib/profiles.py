@@ -111,7 +111,6 @@ class ProfileCollection(dict):
                 scores_str = {str(k): s for k, s in scores.items()}
                 data = {}
                 data.update(scores_str)
-                data.update({f"has_{f}": True for f in scores_str.keys()})
                 data["ftm_score"] = compare._compare(
                     scores, weights=compare.COMPARE_WEIGHTS
                 )
@@ -123,6 +122,7 @@ class ProfileCollection(dict):
                 data["user_weight"] = weights.user_weight
                 data["pair_weight"] = weights.pair_weight
                 data["judgement"] = judgement.value
+                data["profile_id"] = profile.pid
                 pairs_scores.append(data)
         return pairs_scores
 

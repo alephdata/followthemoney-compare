@@ -1,1 +1,1 @@
-from .utils import TARGETS, HAS_TARGETS
+from .utils import TARGETS

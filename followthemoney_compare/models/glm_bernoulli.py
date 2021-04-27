@@ -5,8 +5,8 @@ from .model_base import EvaluatorBase
 
 
 class GLMBernoulliEvaluator(EvaluatorBase):
-    def __init__(self, targets, weights):
-        self.targets = targets
+    def __init__(self, features, weights):
+        self.features = features
         self.weights = weights
         self.weights_mean = {f: w.mean(axis=0) for f, w in weights.items()}
 
@@ -35,16 +35,16 @@ class GLMBernoulli(pmb.PMModelBase):
             "coef": trace.get_values("coef"),
             "intercept": trace.get_values("intercept"),
         }
-        return GLMBernoulliEvaluator(self.targets, weights)
+        return GLMBernoulliEvaluator(self.features, weights)
 
     def setup(self, data):
-        data[self.targets] = data[self.targets].fillna(0)
+        data[self.features] = data[self.features].fillna(0)
         with self.model:
             weights = {
-                "coef": pmb.pm.Normal("coef", 0, 5, shape=len(self.targets)),
+                "coef": pmb.pm.Normal("coef", 0, 5, shape=len(self.features)),
                 "intercept": pmb.pm.Normal("intercept", 0, 5),
             }
-            score = (weights["coef"] * data[self.targets].values).sum(
+            score = (weights["coef"] * data[self.features].values).sum(
                 axis=-1
             ) + weights["intercept"]
             mu = pmb.pm.math.invlogit(score)
