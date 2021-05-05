@@ -10,7 +10,7 @@ from followthemoney import model, compare
 from followthemoney.proxy import EntityProxy
 from followthemoney.exc import InvalidData
 
-from .utils import (
+from utils import (
     create_user_weights_lookup,
     calculate_pair_weights,
     TARGETS,
