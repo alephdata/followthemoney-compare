@@ -6,7 +6,6 @@ followthemoney_compare.egg-info/
 bin/
 build/
 dist/
-lib/
 pyvenv.cfg
 etc/
 share/
