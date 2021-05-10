@@ -14,7 +14,6 @@ DEFAULT_FEATURES_2E = (
     ("country", "pct_full"),
     ("identifier", "identifier"),
     ("identifier", "pct_partial"),
-    ("name", "date"),
     ("date", "date"),
     ("address", "address"),
 )
@@ -91,8 +90,8 @@ class GLMBernoulli2E(pmb.PMModelBase):
                 "intercept": pmb.pm.Normal("intercept", 0, 5),
             }
             score = (
-                (weights["coef"] * data[self.features].values).sum(axis=-1)
-                + (weights["coef_2e"] * data_2e).sum(axis=-1)
+                pmb.T.sum(weights["coef"] * data[self.features].values, axis=-1)
+                + pmb.T.sum(weights["coef_2e"] * data_2e, axis=-1)
                 + weights["intercept"]
             )
             mu = pmb.pm.math.invlogit(score)

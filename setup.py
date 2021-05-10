@@ -28,6 +28,7 @@ setup(
         "followthemoney >= 2.5.0",
         "pyicu >= 2.7.1",
         "tqdm >= 4.50.0",
+        "mmh3",
     ],
     extras_require={
         "dev": [

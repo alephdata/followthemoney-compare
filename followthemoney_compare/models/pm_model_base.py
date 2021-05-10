@@ -1,6 +1,7 @@
 try:
     import pymc3 as pm
     import arviz as ar
+    import theano.tensor as T
 
     DEVMODE = True
 except ImportError:
@@ -31,13 +32,18 @@ class PMModelBase(TrainerBase):
             error = pm.Potential("error", logp)
         return error
 
-    def fit(self, data, n_samples=2_500, n_tune=1_000):
+    def fit(self, data, n_samples=1_000, n_tune=1_000, n_chains=4):
         if not self.can_sample:
             return self
         self.setup(data)
         with self.model:
             self._trace = pm.sample(
-                n_samples, tune=n_tune, progressbar=True, return_inferencedata=False
+                n_samples,
+                tune=n_tune,
+                progressbar=True,
+                return_inferencedata=False,
+                chains=n_chains,
+                cores=n_chains,
             )
             evaluator = self.create_evaluator(self._trace)
             self.set_evaluator(evaluator)

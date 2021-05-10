@@ -1,6 +1,8 @@
 from itertools import chain
 from collections import defaultdict, Counter, namedtuple
+import random
 import math
+import json
 
 import pandas as pd
 
@@ -9,6 +11,15 @@ from followthemoney import model, compare
 
 PairWeights = namedtuple("PairWeights", ("user_weight", "pair_weight"))
 TARGETS = "name country date identifier address phone email iban url".split(" ")
+
+
+def stdin_to_proxies(stdin, exclude_schema=None):
+    for line in stdin:
+        data = json.loads(line)
+        proxy = model.get_proxy(data)
+        if exclude_schema and any(proxy.schema.is_a(s) for s in exclude_schema):
+            continue
+        yield proxy
 
 
 def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):
@@ -71,4 +82,5 @@ def profiles_to_pairs_pandas(profiles, targets=TARGETS, judgements=None):
     df["judgement"] = df.judgement.astype("category")
     df["y"] = df.judgement == "positive"
     df["weight"] = df.user_weight * df.pair_weight
+    df["phase"] = random.choices(["train", "valid"], weights=[0.8, 0.2], k=df.shape[0])
     return df
