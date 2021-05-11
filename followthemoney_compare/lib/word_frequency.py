@@ -1,3 +1,4 @@
+import copy
 import pickle
 import math
 from collections import defaultdict
@@ -5,7 +6,6 @@ from collections import defaultdict
 import numpy as np
 import mmh3
 from normality import normalize
-from followthemoney import model
 
 
 def normalize_text(text):
@@ -17,6 +17,8 @@ def tokenize_text(text):
 
 
 def preprocess_text(text):
+    if not text:
+        return []
     return tokenize_text(normalize_text(text))
 
 
@@ -42,19 +44,22 @@ class WordFrequency:
 
     def add(self, key):
         idxs = list(self.iter_idxs(key))
-        value = np.clip(self._get_idxs(idxs) + 1, 0, self.idtype.max)
+        return self.add_idxs(idxs)
+
+    def add_idxs(self, idxs):
+        value = np.clip(self.get_idxs(idxs) + 1, 0, self.idtype.max)
         for idx in idxs:
             self._bins[idx] = np.maximum(value, self._bins[idx])
         self.n_items += 1
         return value
 
-    def _get_idxs(self, idxs):
+    def get_idxs(self, idxs):
         values = self._bins[idxs]
         return np.min(values)
 
     def get(self, key):
         idxs = list(self.iter_idxs(key))
-        return self._get_idxs(idxs)
+        return self.get_idxs(idxs)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -64,9 +69,10 @@ class WordFrequency:
         assert all(
             len(wf._bins) == N for wf in wfs
         ), "All WordFrequency objects must be the same size"
+        merged = copy.deepcopy(self)
         for wf in wfs:
-            self._bins += wf._bins
-        return self
+            merged._bins += wf._bins
+        return merged
 
     def binarize(self):
         self._bins = self._bins.clip(max=1)
@@ -93,7 +99,7 @@ def word_frequency_from_proxies(
     error_rate,
     document_frequency=False,
     schema_frequency=False,
-    status_freq=100_000,
+    yield_freq=100_000,
 ):
     wf = WordFrequency(confidence=confidence, error_rate=error_rate)
     if document_frequency:
@@ -112,14 +118,16 @@ def word_frequency_from_proxies(
         collection = proxy.context.get("collection")
         for name in proxy.names:
             for token in preprocess_text(name):
-                wf.add(token)
+                idxs = list(wf.iter_idxs(token))
+                wf.add_idxs(idxs)
                 if idf is not None and collection:
-                    idf[collection].add(token)
+                    idf[collection].add_idxs(idxs)
                 if sf is not None:
-                    sf[proxy.schema.name].add(token)
-        if status_freq and (i + 1) % status_freq == 0:
+                    sf[proxy.schema.name].add_idxs(idxs)
+        if yield_freq and (i + 1) % yield_freq == 0:
             print("Status report:", i)
             print(wf)
             print(idf)
             print(sf)
-    return wf, idf, sf
+            yield wf, idf, sf
+    yield wf, idf, sf

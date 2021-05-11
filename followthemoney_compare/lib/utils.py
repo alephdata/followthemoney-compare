@@ -13,10 +13,12 @@ PairWeights = namedtuple("PairWeights", ("user_weight", "pair_weight"))
 TARGETS = "name country date identifier address phone email iban url".split(" ")
 
 
-def stdin_to_proxies(stdin, exclude_schema=None):
+def stdin_to_proxies(stdin, exclude_schema=None, include_schema=None):
     for line in stdin:
         data = json.loads(line)
         proxy = model.get_proxy(data)
+        if include_schema and not any(proxy.schema.is_a(s) for s in include_schema):
+            continue
         if exclude_schema and any(proxy.schema.is_a(s) for s in exclude_schema):
             continue
         yield proxy

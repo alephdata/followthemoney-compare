@@ -1,6 +1,4 @@
-import json
 from pathlib import Path
-from collections import defaultdict
 
 import click
 import pandas as pd
@@ -8,11 +6,7 @@ from followthemoney import model
 
 from .lib.profiles import ProfileCollection
 from .lib.utils import profiles_to_pairs_pandas, stdin_to_proxies
-from .lib.word_frequency import (
-    preprocess_text,
-    WordFrequency,
-    word_frequency_from_proxies,
-)
+from .lib.word_frequency import word_frequency_from_proxies
 from . import models
 
 
@@ -65,7 +59,7 @@ def train(model_name, data_file, output_file, plot=None):
 @click.option("--entities", type=click.File("r"), default="-")
 @click.option(
     "--document-frequency",
-    type=click.File("wb+"),
+    type=click.Path(dir_okay=False, writable=True),
     default=None,
 )
 @click.option(
@@ -73,7 +67,7 @@ def train(model_name, data_file, output_file, plot=None):
     type=click.Path(file_okay=False, writable=True),
     default=None,
 )
-@click.argument("output-file", type=click.File("wb+"))
+@click.argument("output-file", type=click.Path(dir_okay=False, writable=True))
 def create_word_frequency(
     entities,
     output_file,
@@ -82,37 +76,46 @@ def create_word_frequency(
     confidence,
     error_rate,
 ):
+    schema_frequency_dir = Path(schema_frequency_dir)
+
+    def save(wf, idf, sf):
+        print("Saving Results")
+        with open(output_file, "wb+") as fd:
+            wf.save(fd)
+        if idf is not None:
+            for w in idf.values():
+                w.binarize()
+            (root, *siblings) = list(idf.values())
+            merged = root.merge(*siblings)
+            print("Binarized Document Frequency:")
+            print(merged)
+            with open(document_frequency, "wb+") as fd:
+                merged.save(fd)
+        if sf:
+            schema_frequency_dir.mkdir(exist_ok=True, parents=True)
+            for schema, frequency in sf.items():
+                with open(schema_frequency_dir / f"{schema}.pro", "wb+") as fd:
+                    frequency.save(fd)
 
     do_document_frequency = document_frequency is not None
     do_schema_frequency = schema_frequency_dir is not None
     document = model.get("Document")
+    thing = model.get("Thing")
     try:
-        proxies = stdin_to_proxies(entities, exclude_schema=[document])
-        wf, idf, sf = word_frequency_from_proxies(
+        proxies = stdin_to_proxies(
+            entities, exclude_schema=[document], include_schema=[thing]
+        )
+        results = word_frequency_from_proxies(
             proxies,
             confidence,
             error_rate,
             document_frequency=do_document_frequency,
             schema_frequency=do_schema_frequency,
         )
+        for wf, idf, sf in results:
+            save(wf, idf, sf)
     except (BrokenPipeError, KeyboardInterrupt):
         pass
-    print("Saving Results")
-    wf.save(output_file)
-    if idf is not None:
-        for w in idf.values():
-            w.binarize()
-        (root, *siblings) = list(idf.values())
-        root.merge(*siblings)
-        print("Binarized Document Frequency:")
-        print(root)
-        root.save(document_frequency)
-    if sf:
-        schema_frequency_dir = Path(schema_frequency_dir)
-        schema_frequency_dir.mkdir(exist_ok=True, parents=True)
-        for schema, frequency in sf.items():
-            with open(schema_frequency_dir / f"{schema}.pro", "wb+") as fd:
-                frequency.save(fd)
 
 
 if __name__ == "__main__":

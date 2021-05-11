@@ -11,7 +11,6 @@ export -f collection-cat
 gsutil ls "gs://${gcs_bucket}/**/*.json" | \
     grep -v "_profiles.json" | \
     xargs -P 1 -d '\n' -n 1 -I{} bash -c 'collection-cat "{}"' | \
-    head -n 500000 | \
     pv -l | \
     ftm-compare create-word-frequency \
         --document-frequency data/word_freq/document_frequency.pro \
