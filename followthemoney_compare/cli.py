@@ -82,16 +82,19 @@ def create_word_frequency(
         print("Saving Results")
         with open(output_file, "wb+") as fd:
             wf.save(fd)
-        if idf is not None:
+        if idf:
             for w in idf.values():
                 w.binarize()
-            (root, *siblings) = list(idf.values())
-            merged = root.merge(*siblings)
+            if len(idf) > 1:
+                (root, *siblings) = list(idf.values())
+                merged = root.merge(*siblings)
+            else:
+                (merged,) = idf.values()
             print("Binarized Document Frequency:")
             print(merged)
             with open(document_frequency, "wb+") as fd:
                 merged.save(fd)
-        if sf is not None:
+        if sf:
             schema_frequency_dir.mkdir(exist_ok=True, parents=True)
             for schema, frequency in sf.items():
                 with open(schema_frequency_dir / f"{schema}.pro", "wb+") as fd:
@@ -127,17 +130,18 @@ def create_word_frequency(
 )
 @click.argument("output-word-frequency", type=click.Path(dir_okay=False, writable=True))
 def merge_word_frequency(input_word_frequencies, output_word_frequency, binarize):
-    wfs = []
+    root = None
     for input_file in input_word_frequencies:
         with open(input_file, "rb") as fd:
             wf = WordFrequency.load(fd)
             if binarize:
                 wf = wf.binarize()
-            wfs.append(wf)
-    (root, *siblings) = wfs
-    merged = root.merge(*siblings)
+            if root is None:
+                root = wf
+            else:
+                root = root.merge(wf)
     with open(output_word_frequency, "wb+") as fd:
-        merged.save(fd)
+        root.save(fd)
 
 
 if __name__ == "__main__":
