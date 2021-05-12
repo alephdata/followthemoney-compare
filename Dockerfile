@@ -10,6 +10,8 @@ RUN apt-get -qq -y update \
         python3-pip \
         pkgconf \
         libicu-dev \
+        libffi-dev
+        jq \
     && apt-get -qq -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
@@ -19,7 +21,7 @@ RUN apt-get -qq -y update \
 
 ENV LANG='en_US.UTF-8'
 
-RUN pip3 install -q --no-cache-dir -U pip setuptools six psycopg2-binary 
+RUN pip3 install -q --no-cache-dir -U pip setuptools six psycopg2-binary gsutil
 COPY . /opt/followthemoney-compare
 RUN pip3 install -q --no-cache-dir -e /opt/followthemoney-compare
 WORKDIR /opt/followthemoney-compare
