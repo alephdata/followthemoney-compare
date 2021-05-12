@@ -10,7 +10,7 @@ RUN apt-get -qq -y update \
         python3-pip \
         pkgconf \
         libicu-dev \
-        libffi-dev
+        libffi-dev \
         jq \
     && apt-get -qq -y autoremove \
     && apt-get clean \
