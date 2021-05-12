@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name="followthemoney-compare",
-    version="0.0.1",
+    version="0.1.0",
     author="Organized Crime and Corruption Reporting Project",
     author_email="data@occrp.org",
     url="https://github.com/alephdata/followthemoney-compare/",
