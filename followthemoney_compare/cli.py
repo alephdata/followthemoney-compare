@@ -6,7 +6,7 @@ from followthemoney import model
 
 from .lib.profiles import ProfileCollection
 from .lib.utils import profiles_to_pairs_pandas, stdin_to_proxies
-from .lib.word_frequency import word_frequency_from_proxies
+from .lib.word_frequency import WordFrequency, word_frequency_from_proxies
 from . import models
 
 
@@ -54,8 +54,8 @@ def train(model_name, data_file, output_file, plot=None):
 
 
 @main.command("create-word-frequency")
-@click.option("--confidence", default=0.99995, type=float)
-@click.option("--error-rate", default=0.000001, type=float)
+@click.option("--confidence", default=0.9995, type=float)
+@click.option("--error-rate", default=0.0001, type=float)
 @click.option("--entities", type=click.File("r"), default="-")
 @click.option(
     "--document-frequency",
@@ -91,7 +91,7 @@ def create_word_frequency(
             print(merged)
             with open(document_frequency, "wb+") as fd:
                 merged.save(fd)
-        if sf:
+        if sf is not None:
             schema_frequency_dir.mkdir(exist_ok=True, parents=True)
             for schema, frequency in sf.items():
                 with open(schema_frequency_dir / f"{schema}.pro", "wb+") as fd:
@@ -116,6 +116,28 @@ def create_word_frequency(
             save(wf, idf, sf)
     except (BrokenPipeError, KeyboardInterrupt):
         pass
+
+
+@main.command("merge-word-frequency")
+@click.option("--binarize", is_flag=True, default=False)
+@click.argument(
+    "input-word-frequencies",
+    nargs=-1,
+    type=click.Path(dir_okay=False, readable=True),
+)
+@click.argument("output-word-frequency", type=click.Path(dir_okay=False, writable=True))
+def merge_word_frequency(input_word_frequencies, output_word_frequency, binarize):
+    wfs = []
+    for input_file in input_word_frequencies:
+        with open(input_file, "rb") as fd:
+            wf = WordFrequency.load(fd)
+            if binarize:
+                wf = wf.binarize()
+            wfs.append(wf)
+    (root, *siblings) = wfs
+    merged = root.merge(*siblings)
+    with open(output_word_frequency, "wb+") as fd:
+        merged.save(fd)
 
 
 if __name__ == "__main__":

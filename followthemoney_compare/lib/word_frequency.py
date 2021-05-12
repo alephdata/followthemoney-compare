@@ -61,6 +61,9 @@ class WordFrequency:
         idxs = list(self.iter_idxs(key))
         return self.get_idxs(idxs)
 
+    def get_text(self, text):
+        return {token: self.get(token) for token in preprocess_text(text)}
+
     def __getitem__(self, key):
         return self.get(key)
 
@@ -72,6 +75,7 @@ class WordFrequency:
         merged = copy.deepcopy(self)
         for wf in wfs:
             merged._bins += wf._bins
+            merged.n_items += wf.n_items
         return merged
 
     def binarize(self):
