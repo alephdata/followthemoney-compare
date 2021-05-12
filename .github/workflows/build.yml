@@ -10,6 +10,21 @@ jobs:
       - name: Show ref
         run: |
           echo "$GITHUB_REF"
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq libicu-dev
+          pip install wheel pyicu
+          pip install -e "."
+      - name: Build a followthemoney-compare distribution
+        run: |
+          python setup.py sdist bdist_wheel
       - name: Publish followthemoney-compare to PyPI
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
