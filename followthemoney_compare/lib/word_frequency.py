@@ -1,6 +1,9 @@
 import copy
 import pickle
 import math
+import typing
+from pathlib import Path
+from dataclasses import dataclass
 from collections import defaultdict
 
 import numpy as np
@@ -67,14 +70,20 @@ class WordFrequency:
     def __getitem__(self, key):
         return self.get(key)
 
-    def merge(self, *wfs):
-        N = len(self._bins)
+    @staticmethod
+    def merge(root, *wfs, binarize=False):
+        N = len(root._bins)
         assert all(
             len(wf._bins) == N for wf in wfs
         ), "All WordFrequency objects must be the same size"
-        merged = copy.deepcopy(self)
+        merged = copy.deepcopy(root)
+        if binarize:
+            merged.binarize()
         for wf in wfs:
-            merged._bins += wf._bins
+            if binarize:
+                merged._bins += wf._bins.clip(max=1)
+            else:
+                merged._bins += wf._bins
             merged.n_items += wf.n_items
         return merged
 
@@ -95,6 +104,97 @@ class WordFrequency:
     def __repr__(self):
         error = int(self.error_rate * self.n_items)
         return f"<WordFrequency c:{self.confidence};e:{self.error_rate}@{self.n_items}={error}>"
+
+
+@dataclass
+class Frequencies:
+    token: WordFrequency
+    schema: typing.Dict[str, WordFrequency]
+    document: WordFrequency
+
+    @classmethod
+    def from_proxies(
+        cls,
+        proxies,
+        confidence,
+        error_rate,
+        checkpoint_dir=None,
+        checkpoint_freq=100_000,
+    ):
+        tf = WordFrequency(confidence=confidence, error_rate=error_rate)
+        idf = defaultdict(
+            lambda: WordFrequency(confidence=confidence, error_rate=error_rate)
+        )
+        sf = defaultdict(
+            lambda: WordFrequency(confidence=confidence, error_rate=error_rate)
+        )
+        for i, proxy in enumerate(proxies):
+            collection = proxy.context.get("collection")
+            for name in proxy.names:
+                for token in preprocess_text(name):
+                    idxs = list(tf.iter_idxs(token))
+                    tf.add_idxs(idxs)
+                    idf[collection].add_idxs(idxs)
+                    sf[proxy.schema.name].add_idxs(idxs)
+            if checkpoint_freq and (i + 1) % checkpoint_freq == 0:
+                idf_merge = WordFrequency.merge(*idf.values(), binarize=True)
+                freq = cls(tf, idf_merge, sf)
+                freq.summarize()
+                if checkpoint_dir:
+                    freq.save_dir(checkpoint_dir)
+        idf_merge = WordFrequency.merge(*idf.values(), binarize=True)
+        freq = cls(tf, idf_merge, sf)
+        if checkpoint_dir:
+            freq.save_dir(checkpoint_dir)
+        return freq
+
+    def summarize(self):
+        print("Tokens:", self.token)
+        print("Document:", self.document)
+        print("Schmea:", self.schema)
+
+    def token_frequency(self, token, schema=None):
+        try:
+            tf = self.schema[str(schema)]
+        except KeyError:
+            tf = self.token
+        return tf[token]
+
+    def document_frequency(self, token):
+        return self.document[token]
+
+    def tfidf(self, token, schema=None):
+        return self.token_frequency(token, schema) / self.document_frequency(token)
+
+    def inv_tfidf(self, token, schema=None):
+        return self.document_frequency(token) / self.token_frequency(token, schema)
+
+    @classmethod
+    def load_dir(cls, directory):
+        directory = Path(directory)
+        with open(directory / "document_frequency.pro", "rb") as fd:
+            df = WordFrequency.load(fd)
+        with open(directory / "token_frequency.pro", "rb") as fd:
+            tf = WordFrequency.load(fd)
+        sf = {}
+        for schema in directory.glob("schema_frequency/*.pro"):
+            name = schema.stem
+            with open(schema, "rb") as fd:
+                sf[name] = WordFrequency.load(fd)
+        return cls(token=tf, schema=sf, document=df)
+
+    def save_dir(self, directory):
+        directory = Path(directory)
+        directory.mkdir(exist_ok=True, parents=True)
+        with open(directory / "document_frequency.pro", "wb+") as fd:
+            self.document.save(fd)
+        with open(directory / "token_frequency.pro", "wb+") as fd:
+            self.token.save(fd)
+        schema_dir = directory / "schema_frequency"
+        schema_dir.mkdir(exist_ok=True)
+        for schema, f in self.schema.items():
+            with open(schema_dir / f"{schema}.pro", "wb+") as fd:
+                f.save(fd)
 
 
 def word_frequency_from_proxies(

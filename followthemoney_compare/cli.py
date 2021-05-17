@@ -6,7 +6,7 @@ from followthemoney import model
 
 from .lib.profiles import ProfileCollection
 from .lib.utils import profiles_to_pairs_pandas, stdin_to_proxies
-from .lib.word_frequency import WordFrequency, word_frequency_from_proxies
+from .lib.word_frequency import WordFrequency, Frequencies
 from . import models
 
 
@@ -56,67 +56,28 @@ def train(model_name, data_file, output_file, plot=None):
 @main.command("create-word-frequency")
 @click.option("--confidence", default=0.9995, type=float)
 @click.option("--error-rate", default=0.0001, type=float)
+@click.option("--checkpoint-freq", default=100_000, type=int)
 @click.option("--entities", type=click.File("r"), default="-")
-@click.option(
-    "--document-frequency",
-    type=click.Path(dir_okay=False, writable=True),
-    default=None,
-)
-@click.option(
-    "--schema-frequency-dir",
-    type=click.Path(file_okay=False, writable=True),
-    default=None,
-)
-@click.argument("output-file", type=click.Path(dir_okay=False, writable=True))
+@click.argument("output-dir", type=click.Path(file_okay=False, writable=True))
 def create_word_frequency(
-    entities,
-    output_file,
-    document_frequency,
-    schema_frequency_dir,
-    confidence,
-    error_rate,
+    entities, output_dir, confidence, error_rate, checkpoint_freq
 ):
-    schema_frequency_dir = Path(schema_frequency_dir)
+    output_dir = Path(output_dir)
 
-    def save(wf, idf, sf):
-        print("Saving Results")
-        with open(output_file, "wb+") as fd:
-            wf.save(fd)
-        if idf:
-            for w in idf.values():
-                w.binarize()
-            if len(idf) > 1:
-                (root, *siblings) = list(idf.values())
-                merged = root.merge(*siblings)
-            else:
-                (merged,) = idf.values()
-            print("Binarized Document Frequency:")
-            print(merged)
-            with open(document_frequency, "wb+") as fd:
-                merged.save(fd)
-        if sf:
-            schema_frequency_dir.mkdir(exist_ok=True, parents=True)
-            for schema, frequency in sf.items():
-                with open(schema_frequency_dir / f"{schema}.pro", "wb+") as fd:
-                    frequency.save(fd)
-
-    do_document_frequency = document_frequency is not None
-    do_schema_frequency = schema_frequency_dir is not None
     document = model.get("Document")
     thing = model.get("Thing")
     try:
         proxies = stdin_to_proxies(
             entities, exclude_schema=[document], include_schema=[thing]
         )
-        results = word_frequency_from_proxies(
+        frequencies = Frequencies.from_proxies(
             proxies,
             confidence,
             error_rate,
-            document_frequency=do_document_frequency,
-            schema_frequency=do_schema_frequency,
+            checkpoint_dir=output_dir,
+            checkpoint_freq=checkpoint_freq,
         )
-        for wf, idf, sf in results:
-            save(wf, idf, sf)
+        frequencies.summarize()
     except (BrokenPipeError, KeyboardInterrupt):
         pass
 
