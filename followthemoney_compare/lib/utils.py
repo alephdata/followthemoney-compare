@@ -6,11 +6,13 @@ import json
 
 import pandas as pd
 
-from followthemoney import model, compare
+from followthemoney import model
+from followthemoney_compare import compare
+
+from . import TARGETS
 
 
 PairWeights = namedtuple("PairWeights", ("user_weight", "pair_weight"))
-TARGETS = "name country date identifier address phone email iban url".split(" ")
 
 
 def stdin_to_proxies(stdin, exclude_schema=None, include_schema=None):
@@ -32,7 +34,8 @@ def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):
     0 - plateau_start. Constant 1 for scores between plateau_start and
     plateau_end. Linear from 1-0 from plateau_end - 1.
     """
-    score = compare.compare(model, e1, e2)
+    scores = compare.scores(model, e1, e2)
+    score = sum(scores.values()) / len(scores)
     if score < plateau_start:
         return score / (plateau_start)
     elif score < plateau_end:

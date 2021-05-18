@@ -2,6 +2,7 @@ import copy
 import pickle
 import math
 import typing
+import warnings
 from pathlib import Path
 from dataclasses import dataclass
 from collections import defaultdict
@@ -154,9 +155,16 @@ class Frequencies:
         print("Schmea:", self.schema)
 
     def token_frequency(self, token, schema=None):
-        try:
-            tf = self.schema[str(schema)]
-        except KeyError:
+        if schema is not None:
+            try:
+                tf = self.schema[str(schema)]
+            except KeyError:
+                warnings.warn(
+                    f"Schema provided but it could not be found in frequencies lookup: {schema}",
+                    UserWarning,
+                )
+                tf = self.token
+        else:
             tf = self.token
         return tf[token]
 

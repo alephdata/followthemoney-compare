@@ -6,17 +6,16 @@ from enum import Enum
 import json
 
 from tqdm.autonotebook import tqdm
-from followthemoney import model, compare
 from followthemoney.proxy import EntityProxy
 from followthemoney.exc import InvalidData
+import numpy as np
 
 from .utils import (
     create_user_weights_lookup,
     calculate_pair_weights,
     TARGETS,
 )
-
-import numpy as np
+from followthemoney_compare import compare
 
 
 def _describe_list(name, data):
@@ -107,13 +106,10 @@ class ProfileCollection(dict):
             pairs = profile.iter_pairs(judgements)
             for (e1, e2), judgement in pairs:
                 weights = calculate_pair_weights(e1, e2, profile, user_weights)
-                scores = compare.compare_scores(model, e1, e2)
+                scores = compare.scores(model, e1, e2)
                 scores_str = {str(k): s for k, s in scores.items()}
                 data = {}
                 data.update(scores_str)
-                data["ftm_score"] = compare._compare(
-                    scores, weights=compare.COMPARE_WEIGHTS
-                )
                 data["pct_full"] = sum(s is not None for s in scores.values()) / N
                 data["pct_partial"] = sum(s is None for s in scores.values()) / N
                 data["pct_empty"] = len(scores) / N

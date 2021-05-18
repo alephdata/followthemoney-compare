@@ -1,7 +1,6 @@
 try:
     import pymc3 as pm
     import arviz as ar
-    import theano.tensor as T
 
     DEVMODE = True
 except ImportError:

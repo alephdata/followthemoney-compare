@@ -98,4 +98,3 @@ class GLMBernoulli2E(pmb.PMModelBase):
             weights["error"] = self.weighted_bernoili_logli(data, mu)
             self._weights = weights
             return weights
-
