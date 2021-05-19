@@ -11,6 +11,10 @@ from functools import singledispatchmethod
 import pickle
 
 import pandas as pd
+from followthemoney import model
+from followthemoney.proxy import EntityProxy
+
+from .. import compare
 
 
 class EvaluatorBase:
@@ -47,15 +51,18 @@ class EvaluatorBase:
         if not isinstance(scores, (list, tuple)):
             scores = tuple(scores)
         df = pd.Dataframe.from_records(scores)
-        N = len(self.features)
-        df["pct_full"] = [
-            sum(s is not None for s in score.values()) / N for score in scores
-        ]
-        df["pct_partial"] = [
-            sum(s is None for s in score.values()) / N for score in scores
-        ]
-        df["pct_empty"] = [len(score) / N for score in scores]
         return self.create_vector_dataframe(df)
+
+    # TODO: Ideally this could register on typing.Sequence[EntityProxy],
+    #       however there is a bug in singledispatch. This should be fixed in
+    #       >python3.9
+    @create_vector.register(tuple)
+    @create_vector.register(list)
+    def create_vector_ftm_proxies(self, proxies):
+        assert len(proxies) == 2, "Can only create vector for a pair of entities"
+        left, right = proxies
+        scores = compare.scores(model, left, right)
+        return self.create_vector_ftm_scores(scores)
 
 
 class TrainerBase:

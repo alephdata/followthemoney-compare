@@ -22,8 +22,11 @@ def main():
 @click.argument("profile-dir", type=click.Path(file_okay=False))
 @click.argument("output-file", type=click.File("wb+"))
 def create_data(profile_dir, output_file):
+    click.echo("Reading profiles", err=True)
     profiles = ProfileCollection.load_dir(profile_dir)
+    click.echo("Transforming profiles to pandas pairs", err=True)
     df = profiles_to_pairs_pandas(profiles)
+    click.echo("Serializing dataframe", err=True)
     df.to_pickle(output_file)
 
 

@@ -1,6 +1,7 @@
 try:
     import pymc3 as pm
     import arviz as ar
+    import theano.tensor as T
 
     DEVMODE = True
 except ImportError:
@@ -10,7 +11,7 @@ from followthemoney_compare.lib import TARGETS
 from followthemoney_compare.models.model_base import TrainerBase
 
 
-DEFAULT_FEATURES = TARGETS + ["pct_full", "pct_partial"]
+DEFAULT_FEATURES = TARGETS + ["pct_share_prop", "pct_miss_prop"]
 
 
 class PMModelBase(TrainerBase):

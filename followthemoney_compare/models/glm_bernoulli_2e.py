@@ -5,15 +5,15 @@ from .model_base import EvaluatorBase
 
 
 DEFAULT_FEATURES_2E = (
-    ("pct_full", "pct_full"),
-    ("name", "pct_full"),
+    ("pct_share_prop", "pct_share_prop"),
+    ("name", "pct_share_prop"),
     ("name", "name"),
-    ("pct_full", "pct_partial"),
-    ("pct_partial", "pct_partial"),
+    ("pct_share_prop", "pct_miss_prop"),
+    ("pct_miss_prop", "pct_miss_prop"),
     ("name", "identifier"),
-    ("country", "pct_full"),
+    ("country", "pct_share_prop"),
     ("identifier", "identifier"),
-    ("identifier", "pct_partial"),
+    ("identifier", "pct_miss_prop"),
     ("date", "date"),
     ("address", "address"),
 )

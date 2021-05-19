@@ -10,7 +10,7 @@ from .lib import Frequencies
 
 
 try:
-    frequencies = Frequencies.load_dir("../data/word_frequencies/")
+    frequencies = Frequencies.load_dir("./data/word_frequencies/")
     DEFAULT_OVERRIDES = {
         registry.name: partial(compare_names_fuzzy_wf, frequencies=frequencies),
         registry.country: compare_countries,
@@ -30,7 +30,7 @@ def scores(model, left, right, overrides=DEFAULT_OVERRIDES):
     left = model.get_proxy(left)
     right = model.get_proxy(right)
     try:
-        model.common_schema(left.schema, right.schema)
+        common_schema = model.common_schema(left.schema, right.schema)
     except InvalidData:
         return {}
     values = dict()
@@ -49,15 +49,22 @@ def scores(model, left, right, overrides=DEFAULT_OVERRIDES):
                 )
             values[group] = score
         except ValueError:
-            pass
+            values[group] = None
     for group_name in left_groups.symmetric_difference(right_groups):
         group = registry.groups[group_name]
         values[group] = None
+    common_schema_types = {p.type for p in common_schema.properties.values()}
+    N = len(common_schema_types)
+    values.update(
+        {
+            "pct_share_prop": sum(s is not None for s in values.values()) / N,
+            "pct_miss_prop": sum(s is None for s in values.values()) / N,
+        }
+    )
     return values
 
 
 def apply_weights(scores, weights, n_std=1):
-    warnings.warn(FTMPredictWarning())
     if not scores or not any(scores.values()):
         return 0.0
     prob = 0

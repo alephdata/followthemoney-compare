@@ -34,8 +34,10 @@ def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):
     0 - plateau_start. Constant 1 for scores between plateau_start and
     plateau_end. Linear from 1-0 from plateau_end - 1.
     """
-    scores = compare.scores(model, e1, e2)
-    score = sum(scores.values()) / len(scores)
+    scores = list(filter(None, compare.scores(model, e1, e2).values()))
+    if not scores:
+        return 0.0
+    score = sum(scores) / len(scores)
     if score < plateau_start:
         return score / (plateau_start)
     elif score < plateau_end:
@@ -79,8 +81,8 @@ def max_or_none(s):
         return None
 
 
-def profiles_to_pairs_pandas(profiles, targets=TARGETS, judgements=None):
-    pairs_scores = profiles.to_pairs_dict(judgements=judgements, targets=targets)
+def profiles_to_pairs_pandas(profiles, judgements=None):
+    pairs_scores = profiles.to_pairs_dict(judgements=judgements)
     columns = set(k for r in pairs_scores for k in r.keys())
     df = pd.DataFrame.from_records(pairs_scores, columns=columns)
     df = df[df.judgement != "unsure"]
