@@ -1,5 +1,6 @@
 import math
 import warnings
+import os
 from functools import partial
 
 from followthemoney.exc import InvalidData
@@ -10,7 +11,10 @@ from .lib import Frequencies
 
 
 try:
-    frequencies = Frequencies.load_dir("./data/word_frequencies/")
+    FREQUENCIES_DIR = os.environ.get(
+        "FTM_COMPARE_FREQUENCIES_DIR", "./data/word_frequencies/"
+    )
+    frequencies = Frequencies.load_dir(FREQUENCIES_DIR)
     DEFAULT_OVERRIDES = {
         registry.name: partial(compare_names_fuzzy_wf, frequencies=frequencies),
         registry.country: compare_countries,
