@@ -5,6 +5,10 @@ from .model_base import EvaluatorBase
 
 
 class GLMBernoulliEvaluator(EvaluatorBase):
+    """
+    TODO: vectorize this in the same way we did for glm_bernoulli_2e
+    """
+
     def __init__(self, features, weights):
         self.features = features
         self.weights = weights
