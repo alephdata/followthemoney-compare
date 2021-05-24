@@ -55,6 +55,9 @@ class GLMBernoulli2EEvaluator(EvaluatorBase):
         return 1.0 / (1.0 + np.exp(-score))
 
     def predict_std(self, df):
+        return self.predict_proba_std(df)[1]
+
+    def predict_proba_std(self, df):
         data = self.create_vector(df)
         var_W = self._var(data)
         E_W = np.inner(self.weights_mean, data)
@@ -63,7 +66,7 @@ class GLMBernoulli2EEvaluator(EvaluatorBase):
         # Use a one term taylor expansion of var[f(W)] to approximate the
         # variance of logit(sumexp)
         var = var_W * (fp_E_W) ** 2
-        return np.sqrt(var)
+        return f_E_W, np.sqrt(var)
 
     def _var(self, X):
         if X.shape[0] > 125:
