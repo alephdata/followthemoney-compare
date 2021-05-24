@@ -66,6 +66,8 @@ class GLMBernoulli2EEvaluator(EvaluatorBase):
         return np.sqrt(var)
 
     def _var(self, X):
+        if X.shape[0] > 125:
+            return np.einsum("ij,jk,ik->i", X, self.weights_cov, X)
         return (X @ self.weights_cov @ X.T).diagonal()
 
 

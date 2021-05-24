@@ -50,7 +50,8 @@ class EvaluatorBase:
     def create_vector_ftm_scores(self, scores):
         if not isinstance(scores, (list, tuple)):
             scores = tuple(scores)
-        df = pd.Dataframe.from_records(scores)
+        df = pd.DataFrame.from_records(scores)
+        df = df.assign(**{f: None for f in self.features if f not in df})
         return self.create_vector_dataframe(df)
 
     # TODO: Ideally this could register on typing.Sequence[EntityProxy],
@@ -59,9 +60,12 @@ class EvaluatorBase:
     @create_vector.register(tuple)
     @create_vector.register(list)
     def create_vector_ftm_proxies(self, proxies):
-        assert len(proxies) == 2, "Can only create vector for a pair of entities"
-        left, right = proxies
-        scores = compare.scores(model, left, right)
+        if not isinstance(proxies[0], (list, tuple)):
+            proxies = [proxies]
+        scores = []
+        for left, right in proxies:
+            score = compare.scores(model, left, right)
+            scores.append({str(k): v for k, v in score.items()})
         return self.create_vector_ftm_scores(scores)
 
 
