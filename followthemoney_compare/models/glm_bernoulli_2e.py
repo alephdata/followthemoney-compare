@@ -29,6 +29,7 @@ def separate_2e_features(features_1e, features_2e):
 
 class GLMBernoulli2EEvaluator(EvaluatorBase):
     def __init__(self, features, features_2e, weights):
+        super().__init__(features=features)
         self.features = features
         self.features_2e = features_2e
         self._features_2e_left, self._features_2e_right = separate_2e_features(
