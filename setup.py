@@ -26,7 +26,6 @@ setup(
         "numpy >= 1.20.0",
         "pandas >= 1.2.2",
         "followthemoney >= 2.5.0",
-        "pyicu >= 2.7.1",
         "tqdm >= 4.50.0",
         "mmh3",
     ],
