@@ -12,14 +12,15 @@ import pickle
 
 import pandas as pd
 from followthemoney import model
-from followthemoney.proxy import EntityProxy
 
 from .. import compare
+from .. import __version__ as ftm_compare_version
 
 
 class EvaluatorBase:
     def __init__(self, *args, features, **kwargs):
         self.features = features
+        self.version = ftm_compare_version
 
     def predict_std(self, data, n_samples=None):
         raise NotImplementedError
@@ -76,6 +77,7 @@ class TrainerBase:
 
     def __init__(self, features):
         self.features = features
+        self.version = ftm_compare_version
 
     def fit(self, data):
         raise NotImplementedError

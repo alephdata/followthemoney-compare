@@ -2,12 +2,12 @@ from pathlib import Path
 
 import click
 import pandas as pd
-from followthemoney import model
+from followthemoney import model as ftm_model
 
 from .lib.profiles import ProfileCollection
 from .lib.utils import profiles_to_pairs_pandas, stdin_to_proxies
 from .lib.word_frequency import WordFrequency, Frequencies
-from . import models
+from . import models, __version__
 
 
 MODEL_LOOKUP = {m.name: m for m in models.MODELS}
@@ -16,6 +16,12 @@ MODEL_LOOKUP = {m.name: m for m in models.MODELS}
 @click.group()
 def main():
     pass
+
+
+@main.command("version")
+@click.option("--no-newline/-n", is_flag=True, default=True)
+def version(no_newline):
+    click.echo(__version__, nl=no_newline)
 
 
 @main.command("create-data")
@@ -67,8 +73,8 @@ def create_word_frequency(
 ):
     output_dir = Path(output_dir)
 
-    document = model.get("Document")
-    thing = model.get("Thing")
+    document = ftm_model.get("Document")
+    thing = ftm_model.get("Thing")
     try:
         proxies = stdin_to_proxies(
             entities, exclude_schema=[document], include_schema=[thing]
