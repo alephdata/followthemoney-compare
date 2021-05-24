@@ -56,16 +56,17 @@ class GLMBernoulli2EEvaluator(EvaluatorBase):
 
     def predict_std(self, df):
         data = self.create_vector(df)
-        E_Y = np.inner(self.weights_mean, data)
-        var_Y = self._var(data)
-        f_E_Y = 1.0 / (1.0 + np.exp(-E_Y))
-        # Use a one term taylor expansion of var[f(Y)] to approximate the
+        var_W = self._var(data)
+        E_W = np.inner(self.weights_mean, data)
+        f_E_W = 1.0 / (1.0 + np.exp(-E_W))
+        fp_E_W = f_E_W * (1 - f_E_W)
+        # Use a one term taylor expansion of var[f(W)] to approximate the
         # variance of logit(sumexp)
-        var = (f_E_Y * (1 - f_E_Y)) ** 2 * var_Y
+        var = var_W * (fp_E_W) ** 2
         return np.sqrt(var)
 
     def _var(self, X):
-        return np.inner(np.inner(X, self.weights_cov), X).sum(axis=0)
+        return (X @ self.weights_cov @ X.T).diagonal()
 
 
 class GLMBernoulli2E(pmb.PMModelBase):
