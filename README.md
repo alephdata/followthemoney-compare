@@ -22,22 +22,28 @@ They are explained in further detail below.
 
 ## Installation
 
-Installation is done through pipy. To install the minimal dependencies for model evaluation, run
+Installation is done through pipy. To install the minimal dependencies for
+model evaluation, run
 
 ```
 $ pip install followthemoney-compare
 ```
 
-If you intend to train a model or do any model development, you should install the development dependencies as well,
+If you intend to train a model or do any model development, you should install
+the development dependencies as well,
 
 ```
 $ pip install followthemoney-compare[dev]
 ```
 
+In addition, a Dockerfile is provided (which defaults to a minimal
+followthemoney-compare installation) to simplify system dependencies.
+
 
 ## Pre-built models
 
-Pre-built models and word frequency objects are available on OCCRP's public data site. The URLs are:
+Pre-built models and word frequency objects are available on OCCRP's public
+data site. The URLs are:
 
 - https://public.data.occrp.org/develop/models/word-frequencies/word_frequencies.zip
 - https://public.data.occrp.org/develop/models/xref/glm_bernoulli_2e_wf-v0.4.1.pkl
@@ -45,7 +51,9 @@ Pre-built models and word frequency objects are available on OCCRP's public data
 The word_frequencies.zip archive should be unzipped and the envvar
 `FTM_COMPARE_FREQUENCIES_DIR` should be set with the path to the unzipped data.
 
-The model file can be loaded with pickle and used immediately. This pre-built model achives the following accuracy-precision-recall on a dataset build from https://aleph.occrp.org/,
+The model file can be loaded with pickle and used immediately. This pre-built
+model achives the following accuracy-precision-recall on a dataset build from
+https://aleph.occrp.org/,
 
 ![prebuilt evaluation](https://public.data.occrp.org/develop/models/xref/glm_bernoulli_2e_wf-v0.4.1.png)
 
