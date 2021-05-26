@@ -65,7 +65,9 @@ def train(model_name, data_file, output_file, plot=None):
 @main.command("create-word-frequency")
 @click.option("--confidence", default=0.9995, type=float)
 @click.option("--error-rate", default=0.0001, type=float)
-@click.option("--checkpoint-freq", default=100_000, type=int)
+@click.option(
+    "--checkpoint-freq", default=100_000, type=int, help="How often to save the results"
+)
 @click.option("--entities", type=click.File("r"), default="-")
 @click.argument("output-dir", type=click.Path(file_okay=False, writable=True))
 def create_word_frequency(
