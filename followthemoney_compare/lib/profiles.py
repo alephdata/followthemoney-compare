@@ -6,17 +6,16 @@ from enum import Enum
 import json
 
 from tqdm.autonotebook import tqdm
-from followthemoney import model, compare
+from followthemoney import model
 from followthemoney.proxy import EntityProxy
 from followthemoney.exc import InvalidData
+import numpy as np
 
 from utils import (
     create_user_weights_lookup,
     calculate_pair_weights,
-    TARGETS,
 )
-
-import numpy as np
+from followthemoney_compare import compare
 
 
 def _describe_list(name, data):
@@ -99,24 +98,17 @@ class ProfileCollection(dict):
         ]
         _describe_list("entity num properties", proxy_n_properties)
 
-    def to_pairs_dict(self, targets=TARGETS, judgements=None):
+    def to_pairs_dict(self, judgements=None):
         pairs_scores = []
         user_weights = create_user_weights_lookup(self)
-        N = len(targets)
         for profile in tqdm(self.values()):
             pairs = profile.iter_pairs(judgements)
             for (e1, e2), judgement in pairs:
                 weights = calculate_pair_weights(e1, e2, profile, user_weights)
-                scores = compare.compare_scores(model, e1, e2)
+                scores = compare.scores(model, e1, e2)
                 scores_str = {str(k): s for k, s in scores.items()}
                 data = {}
                 data.update(scores_str)
-                data["ftm_score"] = compare._compare(
-                    scores, weights=compare.COMPARE_WEIGHTS
-                )
-                data["pct_full"] = sum(s is not None for s in scores.values()) / N
-                data["pct_partial"] = sum(s is None for s in scores.values()) / N
-                data["pct_empty"] = len(scores) / N
                 data["left_id"] = e1.id
                 data["right_id"] = e2.id
                 data["user_weight"] = weights.user_weight

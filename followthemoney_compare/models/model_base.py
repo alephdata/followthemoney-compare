@@ -11,11 +11,16 @@ from functools import singledispatchmethod
 import pickle
 
 import pandas as pd
+from followthemoney import model
+
+from .. import compare
+from .. import __version__ as ftm_compare_version
 
 
 class EvaluatorBase:
     def __init__(self, *args, features, **kwargs):
         self.features = features
+        self.version = ftm_compare_version
 
     def predict_std(self, data, n_samples=None):
         raise NotImplementedError
@@ -46,16 +51,23 @@ class EvaluatorBase:
     def create_vector_ftm_scores(self, scores):
         if not isinstance(scores, (list, tuple)):
             scores = tuple(scores)
-        df = pd.Dataframe.from_records(scores)
-        N = len(self.features)
-        df["pct_full"] = [
-            sum(s is not None for s in score.values()) / N for score in scores
-        ]
-        df["pct_partial"] = [
-            sum(s is None for s in score.values()) / N for score in scores
-        ]
-        df["pct_empty"] = [len(score) / N for score in scores]
+        df = pd.DataFrame.from_records(scores)
+        df = df.assign(**{f: None for f in self.features if f not in df})
         return self.create_vector_dataframe(df)
+
+    # TODO: Ideally this could register on typing.Sequence[EntityProxy],
+    #       however there is a bug in singledispatch. This should be fixed in
+    #       >python3.9
+    @create_vector.register(tuple)
+    @create_vector.register(list)
+    def create_vector_ftm_proxies(self, proxies):
+        if not isinstance(proxies[0], (list, tuple)):
+            proxies = [proxies]
+        scores = []
+        for left, right in proxies:
+            score = compare.scores(model, left, right)
+            scores.append({str(k): v for k, v in score.items()})
+        return self.create_vector_ftm_scores(scores)
 
 
 class TrainerBase:
@@ -65,6 +77,7 @@ class TrainerBase:
 
     def __init__(self, features):
         self.features = features
+        self.version = ftm_compare_version
 
     def fit(self, data):
         raise NotImplementedError

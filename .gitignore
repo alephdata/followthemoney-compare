@@ -1,6 +1,7 @@
 followthemoney_compare.egg-info/
 *.pkl
 *.png
+<<<<<<< HEAD
 
 # virtualenv things
 bin/

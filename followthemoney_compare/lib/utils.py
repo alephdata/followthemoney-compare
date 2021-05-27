@@ -1,14 +1,29 @@
 from itertools import chain
 from collections import defaultdict, Counter, namedtuple
+import random
 import math
+import json
 
 import pandas as pd
 
-from followthemoney import model, compare
+from followthemoney import model
+from followthemoney_compare import compare
+
+from . import TARGETS
 
 
 PairWeights = namedtuple("PairWeights", ("user_weight", "pair_weight"))
-TARGETS = "name country date identifier address phone email iban url".split(" ")
+
+
+def stdin_to_proxies(stdin, exclude_schema=None, include_schema=None):
+    for line in stdin:
+        data = json.loads(line)
+        proxy = model.get_proxy(data)
+        if include_schema and not any(proxy.schema.is_a(s) for s in include_schema):
+            continue
+        if exclude_schema and any(proxy.schema.is_a(s) for s in exclude_schema):
+            continue
+        yield proxy
 
 
 def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):
@@ -19,7 +34,10 @@ def pair_weight(e1, e2, plateau_start=0.25, plateau_end=0.7):
     0 - plateau_start. Constant 1 for scores between plateau_start and
     plateau_end. Linear from 1-0 from plateau_end - 1.
     """
-    score = compare.compare(model, e1, e2)
+    scores = list(filter(None, compare.scores(model, e1, e2).values()))
+    if not scores:
+        return 0.0
+    score = sum(scores) / len(scores)
     if score < plateau_start:
         return score / (plateau_start)
     elif score < plateau_end:
@@ -63,12 +81,13 @@ def max_or_none(s):
         return None
 
 
-def profiles_to_pairs_pandas(profiles, targets=TARGETS, judgements=None):
-    pairs_scores = profiles.to_pairs_dict(judgements=judgements, targets=targets)
+def profiles_to_pairs_pandas(profiles, judgements=None):
+    pairs_scores = profiles.to_pairs_dict(judgements=judgements)
     columns = set(k for r in pairs_scores for k in r.keys())
     df = pd.DataFrame.from_records(pairs_scores, columns=columns)
     df = df[df.judgement != "unsure"]
     df["judgement"] = df.judgement.astype("category")
     df["y"] = df.judgement == "positive"
     df["weight"] = df.user_weight * df.pair_weight
+    df["phase"] = random.choices(["train", "valid"], weights=[0.8, 0.2], k=df.shape[0])
     return df

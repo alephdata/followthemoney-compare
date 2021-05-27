@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name="followthemoney-compare",
-    version="0.0.1",
+    version="0.4.1",
     author="Organized Crime and Corruption Reporting Project",
     author_email="data@occrp.org",
     url="https://github.com/alephdata/followthemoney-compare/",
@@ -26,8 +26,8 @@ setup(
         "numpy >= 1.20.0",
         "pandas >= 1.2.2",
         "followthemoney >= 2.5.0",
-        "pyicu >= 2.7.1",
         "tqdm >= 4.50.0",
+        "mmh3",
     ],
     extras_require={
         "dev": [
