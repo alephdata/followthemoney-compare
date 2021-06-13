@@ -139,13 +139,11 @@ class Frequencies:
                     sf[proxy.schema.name].add_idxs(idxs)
             if checkpoint_freq and (i + 1) % checkpoint_freq == 0:
                 idf_merge = WordFrequency.merge(*idf.values(), binarize=True)
-                # freq = cls(tf, idf_merge, sf)
                 freq = cls(tf, sf, idf_merge)
                 freq.summarize()
                 if checkpoint_dir:
                     freq.save_dir(checkpoint_dir)
         idf_merge = WordFrequency.merge(*idf.values(), binarize=True)
-        # freq = cls(tf, idf_merge, sf)
         freq = cls(tf, sf, idf_merge)
         if checkpoint_dir:
             freq.save_dir(checkpoint_dir)
