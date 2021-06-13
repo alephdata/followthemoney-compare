@@ -29,6 +29,7 @@ def preprocess_text(text):
 class WordFrequency:
     def __init__(self, confidence, error_rate, bin_dtype="uint32"):
         self.n_items = 0
+        self.n_documents = 0
         self.confidence = confidence
         self.error_rate = error_rate
 
@@ -45,6 +46,9 @@ class WordFrequency:
         for i in range(self.depth):
             idx = (k1 + i * k2) % self.width
             yield (idx % self.width) + (i * self.width)
+
+    def add_doc(self):
+        self.n_documents += 1
 
     def add(self, key):
         idxs = list(self.iter_idxs(key))
@@ -131,6 +135,7 @@ class Frequencies:
         )
         for i, proxy in enumerate(proxies):
             collection = proxy.context.get("collection")
+            tf.add_doc()
             for name in proxy.names:
                 for token in preprocess_text(name):
                     idxs = list(tf.iter_idxs(token))
@@ -175,7 +180,8 @@ class Frequencies:
         return self.token_frequency(token, schema) / self.document_frequency(token)
 
     def inv_tfidf(self, token, schema=None):
-        return self.document_frequency(token) / self.token_frequency(token, schema)
+        return self.token.n_documents / self.document_frequency(token)
+        # return self.document_frequency(token) / self.token_frequency(token, schema)
 
     @classmethod
     def load_dir(cls, directory):

@@ -16,7 +16,7 @@ def _compare_names_fuzzy_wf(t1, s1, t2, s2, frequencies):
     for left, schema, right in ((tp1, s1, tp2), (tp2, s2, tp1)):
         right_str = " ".join(right)
         for token_left in left:
-            n = math.log1p(frequencies.inv_tfidf(token_left, schema=schema))
+            n = math.log(frequencies.inv_tfidf(token_left, schema=schema))
             s = partial_token_set_ratio(
                 token_left, right_str, force_ascii=False, full_process=False
             )
