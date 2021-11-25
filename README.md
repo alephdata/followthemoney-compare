@@ -22,22 +22,28 @@ They are explained in further detail below.
 
 ## Installation
 
-Installation is done through pipy. To install the minimal dependencies for model evaluation, run
+Installation is done through pipy. To install the minimal dependencies for
+model evaluation, run
 
 ```
 $ pip install followthemoney-compare
 ```
 
-If you intend to train a model or do any model development, you should install the development dependencies as well,
+If you intend to train a model or do any model development, you should install
+the development dependencies as well,
 
 ```
 $ pip install followthemoney-compare[dev]
 ```
 
+In addition, a Dockerfile is provided (which defaults to a minimal
+followthemoney-compare installation) to simplify system dependencies.
+
 
 ## Pre-built models
 
-Pre-built models and word frequency objects are available on OCCRP's public data site. The URLs are:
+Pre-built models and word frequency objects are available on OCCRP's public
+data site. The URLs are:
 
 - https://public.data.occrp.org/develop/models/word-frequencies/word_frequencies.zip
 - https://public.data.occrp.org/develop/models/xref/glm_bernoulli_2e_wf-v0.4.1.pkl
@@ -45,7 +51,9 @@ Pre-built models and word frequency objects are available on OCCRP's public data
 The word_frequencies.zip archive should be unzipped and the envvar
 `FTM_COMPARE_FREQUENCIES_DIR` should be set with the path to the unzipped data.
 
-The model file can be loaded with pickle and used immediately. This pre-built model achives the following accuracy-precision-recall on a dataset build from https://aleph.occrp.org/,
+The model file can be loaded with pickle and used immediately. This pre-built
+model achives the following accuracy-precision-recall on a dataset build from
+https://aleph.occrp.org/,
 
 ![prebuilt evaluation](https://public.data.occrp.org/develop/models/xref/glm_bernoulli_2e_wf-v0.4.1.png)
 
@@ -100,7 +108,8 @@ should be saved in your `FTM_COMPARE_FREQUENCIES_DIR` environment variable (it
 defaults to "./data/word_frequencies/").
 
 ```
-$ cat ./data/entities.json | followthemoney-compare create-word-frequency ./data/word-frequency/
+$ cat ./data/entities.json | \
+    followthemoney-compare create-word-frequency ./data/word-frequency/
 ```
 
 
@@ -119,7 +128,8 @@ you are tuning the model features), this may phase is ripe for optimization.
 
 ```
 $ export FTM_COMPARE_FREQUENCIES_DIR="./data/word-frequency"  # optional
-$ followthemoney-compare create-data ./data/profiles-export/ ./data/training-data.pkl
+$ followthemoney-compare create-data \
+    ./data/profiles-export/ ./data/training-data.pkl
 ```
 
 
@@ -140,7 +150,8 @@ $ followthemoney-compare train \
 ```
 
 Once trained, the optional parameter `--plot` will create a 
-accuracy/precision/recall curve for the resulting model which can be used for diagnostics.
+accuracy/precision/recall curve for the resulting model which can be used for
+diagnostics.
 
 The resulting model can be loaded using `pickle` or the
 `followthemoney_compare.models.GLMBernouli2EEvaluate.load_pickles` method. This
@@ -151,7 +162,8 @@ As a result, when creating a new model type it is probably best to train the
 models using the python API and to only use the CLI tool when training a known
 model.
 
-Evaluation of the resulting evaluation object is quite simple and flexible. It provides the method:
+Evaluation of the resulting evaluation object is quite simple and flexible. It
+provides the method:
 
 - predict(): returns True / False representing whether the arguments are or
   aren't matches
@@ -165,9 +177,12 @@ Evaluation of the resulting evaluation object is quite simple and flexible. It p
 
 The arguments to these functions can take the following forms:
 
-- DataFrame: a DataFrame in the same format as the one returned by the `create-data` command
-- dict: a dictionary from the output of `followthemoney_compare.compare.scores()`
-- list of proxy pairs: A tuple of two `followthemoney.proxy.EntityProxy` objects or a list of these pairs.
+- DataFrame: a DataFrame in the same format as the one returned by the
+  `create-data` command
+- dict: a dictionary from the output of
+  `followthemoney_compare.compare.scores()`
+- list of proxy pairs: A tuple of two `followthemoney.proxy.EntityProxy`
+  objects or a list of these pairs.
 
 
 ## Model Descriptions
@@ -244,11 +259,13 @@ model performed well:
   effective number of samples used to fit this parameter. If it is quite low,
   then your data isn't well represented by the model or the training data is
   too noisy.
-- Inspect the accuracy-precision-recall curve and make sure the model is sensible.
+- Inspect the accuracy-precision-recall curve and make sure the model is
+  sensible.
 
 
 ## Improvements
 
 - [ ] Parallelize training data creation
-- [ ] Better test/train split (stratified group sampling on collection id? k-folds?)
+- [ ] Better test/train split (stratified group sampling on collection id?
+      k-folds?)
 - [ ] Better feature engineering or deep learning models?
