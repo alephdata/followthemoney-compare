@@ -41,16 +41,16 @@ jobs:
           echo "$GITHUB_REF"
       - name: Build docker image
         run: |
-          docker build -t alephdata/followthemoney-compare:latest .
+          docker build -t ghcr.io/alephdata/followthemoney-compare:latest .
       - name: Push docker image for commit hashes
         run: |
-          docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_password }}
-          docker build -t alephdata/followthemoney-compare:${GITHUB_SHA} .
-          docker push alephdata/followthemoney-compare:${GITHUB_SHA}
+          docker login -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }}
+          docker build -t ghcr.io/alephdata/followthemoney-compare:${GITHUB_SHA} .
+          docker push ghcr.io/alephdata/followthemoney-compare:${GITHUB_SHA}
       - name: Push docker image for tags
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
         run: |
-          docker login -u ${{ secrets.docker_user }} -p ${{ secrets.docker_password }}
-          docker build -t alephdata/followthemoney-compare:${GITHUB_REF/refs\/tags\//} .
-          docker push alephdata/followthemoney-compare:${GITHUB_REF/refs\/tags\//}
-          docker push alephdata/followthemoney-compare:latest
+          docker login -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }}
+          docker build -t ghcr.io/alephdata/followthemoney-compare:${GITHUB_REF/refs\/tags\//} .
+          docker push ghcr.io/alephdata/followthemoney-compare:${GITHUB_REF/refs\/tags\//}
+          docker push ghcr.io/alephdata/followthemoney-compare:latest
