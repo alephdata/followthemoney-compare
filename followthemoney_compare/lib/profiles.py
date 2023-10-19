@@ -11,7 +11,7 @@ from followthemoney.proxy import EntityProxy
 from followthemoney.exc import InvalidData
 import numpy as np
 
-from .utils import (
+from utils import (
     create_user_weights_lookup,
     calculate_pair_weights,
 )

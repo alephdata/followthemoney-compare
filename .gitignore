@@ -1,4 +1,18 @@
 followthemoney_compare.egg-info/
 *.pkl
 *.png
-data/
+<<<<<<< HEAD
+
+# virtualenv things
+bin/
+build/
+dist/
+pyvenv.cfg
+etc/
+share/
+
+
+*.ipynb_checkpoints/
+*__pycache__/
+
+.DS_Store
